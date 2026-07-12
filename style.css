@@ -1,0 +1,284 @@
+/* =========================================================================
+   Kanji Quiz Advance — design tokens
+   Washi paper + ai-zome indigo + hanko seal red, carried over from the
+   original quiz, extended with an ochre "gold" accent for streak/speed
+   moments and a stamp-card motif for level progress.
+   ========================================================================= */
+:root{
+  --bg:#F6F3EC;
+  --card:#FFFDF8;
+  --ink:#201E1B;
+  --muted:#8B8074;
+  --line:#DDD5C7;
+  --indigo:#2F4C6B;
+  --indigo-dark:#1F3450;
+  --seal:#B33B49;
+  --seal-dark:#8E2530;
+  --moss:#3F6B4E;
+  --amber:#C97C2C;
+  --amber-dark:#9C5E1D;
+  --radius:14px;
+}
+*{ box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+}
+html,body{
+  margin:0; padding:0; background:var(--bg); color:var(--ink);
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before{
+  content:""; position:fixed; inset:0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(32,30,27,0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  pointer-events:none; z-index:0;
+}
+#app{
+  position:relative; z-index:1;
+  max-width:520px; margin:0 auto; min-height:100vh;
+  display:flex; flex-direction:column;
+  padding: 18px 18px 48px;
+}
+h1,h2,h3{ font-family:'Shippori Mincho', serif; margin:0; }
+a{ color:var(--indigo); }
+button{ font-family:inherit; }
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.brand{
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:19px;
+}
+.brand .jp{ color:var(--indigo); font-size:13px; letter-spacing:0.1em; display:block; margin-bottom:1px; }
+.backbtn{
+  background:none; border:1px solid var(--line); border-radius:999px;
+  padding:6px 14px; font-size:13px; color:var(--muted); cursor:pointer;
+}
+.backbtn:hover{ border-color:var(--indigo); color:var(--indigo); }
+
+.eyebrow{
+  font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+  color:var(--indigo); font-weight:700; margin-bottom:6px;
+}
+.sub{ color:var(--muted); font-size:14px; margin-bottom:20px; line-height:1.55; }
+
+/* ---------- Stamp card (level progress signature element) ---------- */
+.stampcard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px 18px; margin-bottom:18px;
+  display:flex; align-items:center; gap:14px;
+}
+.stampcard .slots{ display:flex; gap:10px; }
+.stampslot{
+  width:46px; height:46px; border-radius:50%;
+  border:2px dashed var(--line);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:15px;
+  color:var(--line); flex-shrink:0; position:relative;
+}
+.stampslot.done{
+  border:2px solid var(--seal); color:var(--seal);
+  transform: rotate(-6deg);
+}
+.stampslot.current{ border-color:var(--indigo); color:var(--indigo); border-style:solid; }
+.stampcard .label{ font-size:13px; color:var(--muted); line-height:1.5; }
+.stampcard .label strong{ color:var(--ink); font-family:'Shippori Mincho', serif; font-size:15px; display:block; }
+
+/* ---------- Home menu ---------- */
+.modecard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:18px; margin-bottom:14px; cursor:pointer; text-align:left; width:100%;
+  display:flex; gap:14px; align-items:flex-start;
+  transition: transform .15s ease;
+}
+.modecard:active{ transform: scale(0.98); }
+.modecard:focus-visible, button:focus-visible, .opt:focus-visible, .levelrow:focus-visible{
+  outline:3px solid var(--indigo); outline-offset:2px;
+}
+.modecard .icon{
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-size:22px; font-weight:700;
+  background:var(--bg); border:1px solid var(--line); color:var(--indigo);
+}
+.modecard h3{ font-size:17px; margin-bottom:3px; }
+.modecard p{ margin:0; color:var(--muted); font-size:13.5px; line-height:1.5; }
+.modecard .tag{
+  display:inline-block; margin-top:8px; font-size:10.5px; letter-spacing:0.08em;
+  text-transform:uppercase; font-weight:700; padding:2px 9px; border-radius:999px;
+}
+.tag.tag-level{ color:var(--indigo); border:1px solid var(--indigo); }
+.tag.tag-speed{ color:var(--amber-dark); border:1px solid var(--amber); }
+.tag.tag-study{ color:var(--moss); border:1px solid var(--moss); }
+
+/* ---------- Level picker rows ---------- */
+.levelrow{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px; margin-bottom:10px; width:100%; text-align:left; cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+}
+.levelrow .num{
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:16px;
+  background:var(--bg); border:1px solid var(--line); color:var(--indigo);
+}
+.levelrow h4{ font-size:15px; margin:0 0 2px; font-family:'Shippori Mincho', serif; }
+.levelrow p{ margin:0; font-size:12.5px; color:var(--muted); line-height:1.4; }
+.levelrow.locked{ opacity:0.55; cursor:not-allowed; }
+.levelrow .lockicon{ margin-left:auto; color:var(--muted); font-size:18px; }
+
+/* ---------- Progress bar ---------- */
+.progress-wrap{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.progress-track{ flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden; }
+.progress-fill{ height:100%; background:var(--indigo); border-radius:99px; transition:width .35s ease; }
+.progress-fill.speed{ background:var(--amber); }
+.progress-label{ font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+/* ---------- Timer ring (speed mode) ---------- */
+.timerwrap{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.timerring{ position:relative; width:40px; height:40px; flex-shrink:0; }
+.timerring svg{ transform: rotate(-90deg); }
+.timerring circle.bg{ fill:none; stroke:var(--line); stroke-width:4; }
+.timerring circle.fg{ fill:none; stroke:var(--amber); stroke-width:4; stroke-linecap:round; transition: stroke-dashoffset .2s linear, stroke .2s ease; }
+.timerring.low circle.fg{ stroke:var(--seal); }
+.timerring .num{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;
+}
+.streak{ font-size:13px; color:var(--amber-dark); font-weight:700; display:flex; align-items:center; gap:4px; }
+
+/* ---------- Question card ---------- */
+.qcard{
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  padding:22px 20px; position:relative; overflow:hidden; flex:1;
+  display:flex; flex-direction:column;
+}
+.qcard::before{
+  content:"問"; position:absolute; top:-14px; right:-6px;
+  font-family:'Shippori Mincho', serif; font-size:110px; color:var(--indigo);
+  opacity:0.05; line-height:1; pointer-events:none;
+}
+.section-tag{
+  font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--seal); margin-bottom:10px;
+}
+.kanji-big{ font-family:'Shippori Mincho', serif; font-size:56px; font-weight:700; line-height:1.1; margin:4px 0 6px; }
+.q-desc{ font-size:17px; line-height:1.55; font-weight:500; margin:4px 0 6px; }
+.q-hint{ color:var(--muted); font-size:13.5px; margin-bottom:16px; }
+
+.options{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+.opt{
+  text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:12px;
+  padding:13px 14px; font-size:16px; color:var(--ink); cursor:pointer;
+  display:flex; align-items:center; gap:10px;
+  transition: border-color .12s ease, background .12s ease, transform .08s ease;
+}
+.opt:active{ transform: scale(0.99); }
+.opt .letter{
+  width:26px; height:26px; border-radius:50%; background:var(--bg); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700;
+  color:var(--muted); flex-shrink:0;
+}
+.opt.correct{ border-color:var(--moss); background:#F1F7F3; }
+.opt.correct .letter{ background:var(--moss); border-color:var(--moss); color:#fff; }
+.opt.wrong{ border-color:var(--seal); background:#FBF0F1; }
+.opt.wrong .letter{ background:var(--seal); border-color:var(--seal); color:#fff; }
+.opt.disabled{ cursor:default; }
+.opt.dim{ opacity:0.5; }
+
+.feedback{ margin-top:16px; font-size:14px; color:var(--muted); min-height:20px; }
+.feedback.show-correct{ color:var(--moss); font-weight:700; }
+.feedback.show-wrong{ color:var(--seal-dark); font-weight:700; }
+
+.stamp{
+  position:absolute; top:18px; right:18px; width:64px; height:64px; border-radius:50%;
+  border:3px solid var(--seal); color:var(--seal); display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:24px;
+  opacity:0; transform:scale(1.6) rotate(-18deg); pointer-events:none;
+}
+.stamp.pop{ animation: stampIn .38s cubic-bezier(.2,1.4,.4,1) forwards; }
+.stamp.wrongstamp{ border-color:var(--indigo); color:var(--indigo); }
+@keyframes stampIn{
+  0%{ opacity:0; transform:scale(2.2) rotate(-18deg); }
+  60%{ opacity:1; transform:scale(0.92) rotate(-10deg); }
+  100%{ opacity:0.9; transform:scale(1) rotate(-10deg); }
+}
+
+.nextbar{ margin-top:16px; }
+button.primary{
+  width:100%; background:var(--indigo); color:#fff; border:none; border-radius:12px;
+  padding:14px; font-size:16px; font-weight:700; cursor:pointer;
+}
+button.primary:active{ background:var(--indigo-dark); }
+button.primary:disabled{ opacity:0.4; cursor:default; }
+button.primary.amber{ background:var(--amber); }
+button.primary.amber:active{ background:var(--amber-dark); }
+button.ghost{
+  width:100%; background:transparent; color:var(--indigo); border:1.5px solid var(--indigo);
+  border-radius:12px; padding:12px; font-size:14.5px; font-weight:700; margin-top:10px; cursor:pointer;
+}
+
+/* ---------- Flashcard (tango card) mode ---------- */
+.flash-progress{ text-align:center; font-size:12.5px; color:var(--muted); margin-bottom:10px; }
+.flashzone{ flex:1; display:flex; align-items:center; justify-content:center; padding:10px 0 22px; perspective:1200px; }
+.flashcard{
+  width:100%; max-width:340px; height:230px; position:relative;
+  cursor:pointer;
+}
+.flashcard .punch{
+  position:absolute; top:10px; left:16px; width:12px; height:12px; border-radius:50%;
+  background:var(--bg); border:1px solid var(--line); z-index:2;
+}
+.flashcard-inner{
+  width:100%; height:100%; position:relative; transition: transform .5s;
+  transform-style: preserve-3d;
+}
+.flashcard.flipped .flashcard-inner{ transform: rotateY(180deg); }
+.flashface{
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:14px; border:1px solid var(--line); background:var(--card);
+  box-shadow: 6px 6px 0 var(--line);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:20px; text-align:center;
+}
+.flashface .topic{ position:absolute; top:14px; left:32px; font-size:11px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; }
+.flashface .kanji{ font-family:'Shippori Mincho', serif; font-size:46px; font-weight:700; }
+.flashface .prompttext{ font-size:16px; line-height:1.5; }
+.flashface.back{ transform: rotateY(180deg); }
+.flashface .reading{ font-family:'Shippori Mincho', serif; font-size:26px; margin-bottom:6px; }
+.flashface .meaning{ font-size:14px; color:var(--muted); }
+.flashhint{ text-align:center; font-size:12px; color:var(--muted); margin-top:10px; }
+.flashnav{ display:flex; gap:10px; margin-top:14px; }
+.flashnav button{
+  flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:12px; font-size:14px; color:var(--ink); cursor:pointer;
+}
+.flashnav button:active{ background:var(--bg); }
+
+/* ---------- Result screen ---------- */
+.result{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:30px 22px; text-align:center; }
+.result .bigstamp{
+  width:120px; height:120px; border-radius:50%; border:4px solid var(--seal); color:var(--seal);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  margin:0 auto 18px; transform: rotate(-8deg); font-family:'Shippori Mincho', serif;
+}
+.result .bigstamp.amber{ border-color:var(--amber); color:var(--amber-dark); }
+.result .bigstamp .score-num{ font-size:34px; font-weight:700; line-height:1; }
+.result .bigstamp .score-den{ font-size:13px; }
+.result h2{ font-size:22px; margin:0 0 6px; }
+.result p{ color:var(--muted); font-size:14px; margin:0 0 20px; line-height:1.6; }
+.breakdown{ display:flex; justify-content:center; gap:18px; margin-bottom:22px; flex-wrap:wrap; }
+.breakdown div{ font-size:13px; color:var(--muted); }
+.breakdown strong{ display:block; font-size:20px; color:var(--ink); font-family:'Shippori Mincho', serif; }
+.passbadge{
+  display:inline-block; margin-bottom:14px; padding:5px 14px; border-radius:999px;
+  font-size:12.5px; font-weight:700; letter-spacing:0.04em;
+}
+.passbadge.pass{ background:#F1F7F3; color:var(--moss); border:1px solid var(--moss); }
+.passbadge.retry{ background:#FBF0F1; color:var(--seal-dark); border:1px solid var(--seal); }
+
+.footer-note{ text-align:center; color:var(--muted); font-size:11.5px; margin-top:22px; line-height:1.6; }
