@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kanji Quiz Advance — 日本語</title>
+<meta name="description" content="Latihan kanji N5/N4 dengan mode level bertahap, kecepatan, dan flashcard.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* =========================================================================
+   Kanji Quiz Advance — design tokens
+   Washi paper + ai-zome indigo + hanko seal red, carried over from the
+   original quiz, extended with an ochre "gold" accent for streak/speed
+   moments and a stamp-card motif for level progress.
+   ========================================================================= */
+:root{
+  --bg:#F6F3EC;
+  --card:#FFFDF8;
+  --ink:#201E1B;
+  --muted:#8B8074;
+  --line:#DDD5C7;
+  --indigo:#2F4C6B;
+  --indigo-dark:#1F3450;
+  --seal:#B33B49;
+  --seal-dark:#8E2530;
+  --moss:#3F6B4E;
+  --amber:#C97C2C;
+  --amber-dark:#9C5E1D;
+  --radius:14px;
+}
+*{ box-sizing:border-box; }
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; }
+}
+html,body{
+  margin:0; padding:0; background:var(--bg); color:var(--ink);
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before{
+  content:""; position:fixed; inset:0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(32,30,27,0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  pointer-events:none; z-index:0;
+}
+#app{
+  position:relative; z-index:1;
+  max-width:520px; margin:0 auto; min-height:100vh;
+  display:flex; flex-direction:column;
+  padding: 18px 18px 48px;
+}
+h1,h2,h3{ font-family:'Shippori Mincho', serif; margin:0; }
+a{ color:var(--indigo); }
+button{ font-family:inherit; }
+
+/* ---------- top bar ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.brand{
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:19px;
+}
+.brand .jp{ color:var(--indigo); font-size:13px; letter-spacing:0.1em; display:block; margin-bottom:1px; }
+.backbtn{
+  background:none; border:1px solid var(--line); border-radius:999px;
+  padding:6px 14px; font-size:13px; color:var(--muted); cursor:pointer;
+}
+.backbtn:hover{ border-color:var(--indigo); color:var(--indigo); }
+
+.eyebrow{
+  font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+  color:var(--indigo); font-weight:700; margin-bottom:6px;
+}
+.sub{ color:var(--muted); font-size:14px; margin-bottom:20px; line-height:1.55; }
+
+/* ---------- Stamp card (level progress signature element) ---------- */
+.stampcard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px 18px; margin-bottom:18px;
+  display:flex; align-items:center; gap:14px;
+}
+.stampcard .slots{ display:flex; gap:10px; }
+.stampslot{
+  width:46px; height:46px; border-radius:50%;
+  border:2px dashed var(--line);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:15px;
+  color:var(--line); flex-shrink:0; position:relative;
+}
+.stampslot.done{
+  border:2px solid var(--seal); color:var(--seal);
+  transform: rotate(-6deg);
+}
+.stampslot.current{ border-color:var(--indigo); color:var(--indigo); border-style:solid; }
+.stampcard .label{ font-size:13px; color:var(--muted); line-height:1.5; }
+.stampcard .label strong{ color:var(--ink); font-family:'Shippori Mincho', serif; font-size:15px; display:block; }
+
+/* ---------- Home menu ---------- */
+.modecard{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:18px; margin-bottom:14px; cursor:pointer; text-align:left; width:100%;
+  display:flex; gap:14px; align-items:flex-start;
+  transition: transform .15s ease;
+}
+.modecard:active{ transform: scale(0.98); }
+.modecard:focus-visible, button:focus-visible, .opt:focus-visible, .levelrow:focus-visible{
+  outline:3px solid var(--indigo); outline-offset:2px;
+}
+.modecard .icon{
+  width:44px; height:44px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-size:22px; font-weight:700;
+  background:var(--bg); border:1px solid var(--line); color:var(--indigo);
+}
+.modecard h3{ font-size:17px; margin-bottom:3px; }
+.modecard p{ margin:0; color:var(--muted); font-size:13.5px; line-height:1.5; }
+.modecard .tag{
+  display:inline-block; margin-top:8px; font-size:10.5px; letter-spacing:0.08em;
+  text-transform:uppercase; font-weight:700; padding:2px 9px; border-radius:999px;
+}
+.tag.tag-level{ color:var(--indigo); border:1px solid var(--indigo); }
+.tag.tag-speed{ color:var(--amber-dark); border:1px solid var(--amber); }
+.tag.tag-study{ color:var(--moss); border:1px solid var(--moss); }
+
+/* ---------- Level picker rows ---------- */
+.levelrow{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+  padding:16px; margin-bottom:10px; width:100%; text-align:left; cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+}
+.levelrow .num{
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:16px;
+  background:var(--bg); border:1px solid var(--line); color:var(--indigo);
+}
+.levelrow h4{ font-size:15px; margin:0 0 2px; font-family:'Shippori Mincho', serif; }
+.levelrow p{ margin:0; font-size:12.5px; color:var(--muted); line-height:1.4; }
+.levelrow.locked{ opacity:0.55; cursor:not-allowed; }
+.levelrow .lockicon{ margin-left:auto; color:var(--muted); font-size:18px; }
+
+/* ---------- Progress bar ---------- */
+.progress-wrap{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.progress-track{ flex:1; height:6px; background:var(--line); border-radius:99px; overflow:hidden; }
+.progress-fill{ height:100%; background:var(--indigo); border-radius:99px; transition:width .35s ease; }
+.progress-fill.speed{ background:var(--amber); }
+.progress-label{ font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+/* ---------- Timer ring (speed mode) ---------- */
+.timerwrap{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.timerring{ position:relative; width:40px; height:40px; flex-shrink:0; }
+.timerring svg{ transform: rotate(-90deg); }
+.timerring circle.bg{ fill:none; stroke:var(--line); stroke-width:4; }
+.timerring circle.fg{ fill:none; stroke:var(--amber); stroke-width:4; stroke-linecap:round; transition: stroke-dashoffset .2s linear, stroke .2s ease; }
+.timerring.low circle.fg{ stroke:var(--seal); }
+.timerring .num{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-size:12px; font-weight:700; color:var(--ink); font-variant-numeric:tabular-nums;
+}
+.streak{ font-size:13px; color:var(--amber-dark); font-weight:700; display:flex; align-items:center; gap:4px; }
+
+/* ---------- Question card ---------- */
+.qcard{
+  background:var(--card); border:1px solid var(--line); border-radius:16px;
+  padding:22px 20px; position:relative; overflow:hidden; flex:1;
+  display:flex; flex-direction:column;
+}
+.qcard::before{
+  content:"問"; position:absolute; top:-14px; right:-6px;
+  font-family:'Shippori Mincho', serif; font-size:110px; color:var(--indigo);
+  opacity:0.05; line-height:1; pointer-events:none;
+}
+.section-tag{
+  font-size:11px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;
+  color:var(--seal); margin-bottom:10px;
+}
+.kanji-big{ font-family:'Shippori Mincho', serif; font-size:56px; font-weight:700; line-height:1.1; margin:4px 0 6px; }
+.q-desc{ font-size:17px; line-height:1.55; font-weight:500; margin:4px 0 6px; }
+.q-hint{ color:var(--muted); font-size:13.5px; margin-bottom:16px; }
+
+.options{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
+.opt{
+  text-align:left; background:#fff; border:1.5px solid var(--line); border-radius:12px;
+  padding:13px 14px; font-size:16px; color:var(--ink); cursor:pointer;
+  display:flex; align-items:center; gap:10px;
+  transition: border-color .12s ease, background .12s ease, transform .08s ease;
+}
+.opt:active{ transform: scale(0.99); }
+.opt .letter{
+  width:26px; height:26px; border-radius:50%; background:var(--bg); border:1px solid var(--line);
+  display:flex; align-items:center; justify-content:center; font-size:12.5px; font-weight:700;
+  color:var(--muted); flex-shrink:0;
+}
+.opt.correct{ border-color:var(--moss); background:#F1F7F3; }
+.opt.correct .letter{ background:var(--moss); border-color:var(--moss); color:#fff; }
+.opt.wrong{ border-color:var(--seal); background:#FBF0F1; }
+.opt.wrong .letter{ background:var(--seal); border-color:var(--seal); color:#fff; }
+.opt.disabled{ cursor:default; }
+.opt.dim{ opacity:0.5; }
+
+.feedback{ margin-top:16px; font-size:14px; color:var(--muted); min-height:20px; }
+.feedback.show-correct{ color:var(--moss); font-weight:700; }
+.feedback.show-wrong{ color:var(--seal-dark); font-weight:700; }
+
+.stamp{
+  position:absolute; top:18px; right:18px; width:64px; height:64px; border-radius:50%;
+  border:3px solid var(--seal); color:var(--seal); display:flex; align-items:center; justify-content:center;
+  font-family:'Shippori Mincho', serif; font-weight:700; font-size:24px;
+  opacity:0; transform:scale(1.6) rotate(-18deg); pointer-events:none;
+}
+.stamp.pop{ animation: stampIn .38s cubic-bezier(.2,1.4,.4,1) forwards; }
+.stamp.wrongstamp{ border-color:var(--indigo); color:var(--indigo); }
+@keyframes stampIn{
+  0%{ opacity:0; transform:scale(2.2) rotate(-18deg); }
+  60%{ opacity:1; transform:scale(0.92) rotate(-10deg); }
+  100%{ opacity:0.9; transform:scale(1) rotate(-10deg); }
+}
+
+.nextbar{ margin-top:16px; }
+button.primary{
+  width:100%; background:var(--indigo); color:#fff; border:none; border-radius:12px;
+  padding:14px; font-size:16px; font-weight:700; cursor:pointer;
+}
+button.primary:active{ background:var(--indigo-dark); }
+button.primary:disabled{ opacity:0.4; cursor:default; }
+button.primary.amber{ background:var(--amber); }
+button.primary.amber:active{ background:var(--amber-dark); }
+button.ghost{
+  width:100%; background:transparent; color:var(--indigo); border:1.5px solid var(--indigo);
+  border-radius:12px; padding:12px; font-size:14.5px; font-weight:700; margin-top:10px; cursor:pointer;
+}
+
+/* ---------- Flashcard (tango card) mode ---------- */
+.flash-progress{ text-align:center; font-size:12.5px; color:var(--muted); margin-bottom:10px; }
+.flashzone{ flex:1; display:flex; align-items:center; justify-content:center; padding:10px 0 22px; perspective:1200px; }
+.flashcard{
+  width:100%; max-width:340px; height:230px; position:relative;
+  cursor:pointer;
+}
+.flashcard .punch{
+  position:absolute; top:10px; left:16px; width:12px; height:12px; border-radius:50%;
+  background:var(--bg); border:1px solid var(--line); z-index:2;
+}
+.flashcard-inner{
+  width:100%; height:100%; position:relative; transition: transform .5s;
+  transform-style: preserve-3d;
+}
+.flashcard.flipped .flashcard-inner{ transform: rotateY(180deg); }
+.flashface{
+  position:absolute; inset:0; backface-visibility:hidden;
+  border-radius:14px; border:1px solid var(--line); background:var(--card);
+  box-shadow: 6px 6px 0 var(--line);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:20px; text-align:center;
+}
+.flashface .topic{ position:absolute; top:14px; left:32px; font-size:11px; color:var(--muted); letter-spacing:0.06em; text-transform:uppercase; }
+.flashface .kanji{ font-family:'Shippori Mincho', serif; font-size:46px; font-weight:700; }
+.flashface .prompttext{ font-size:16px; line-height:1.5; }
+.flashface.back{ transform: rotateY(180deg); }
+.flashface .reading{ font-family:'Shippori Mincho', serif; font-size:26px; margin-bottom:6px; }
+.flashface .meaning{ font-size:14px; color:var(--muted); }
+.flashhint{ text-align:center; font-size:12px; color:var(--muted); margin-top:10px; }
+.flashnav{ display:flex; gap:10px; margin-top:14px; }
+.flashnav button{
+  flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;
+  padding:12px; font-size:14px; color:var(--ink); cursor:pointer;
+}
+.flashnav button:active{ background:var(--bg); }
+
+/* ---------- Result screen ---------- */
+.result{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:30px 22px; text-align:center; }
+.result .bigstamp{
+  width:120px; height:120px; border-radius:50%; border:4px solid var(--seal); color:var(--seal);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  margin:0 auto 18px; transform: rotate(-8deg); font-family:'Shippori Mincho', serif;
+}
+.result .bigstamp.amber{ border-color:var(--amber); color:var(--amber-dark); }
+.result .bigstamp .score-num{ font-size:34px; font-weight:700; line-height:1; }
+.result .bigstamp .score-den{ font-size:13px; }
+.result h2{ font-size:22px; margin:0 0 6px; }
+.result p{ color:var(--muted); font-size:14px; margin:0 0 20px; line-height:1.6; }
+.breakdown{ display:flex; justify-content:center; gap:18px; margin-bottom:22px; flex-wrap:wrap; }
+.breakdown div{ font-size:13px; color:var(--muted); }
+.breakdown strong{ display:block; font-size:20px; color:var(--ink); font-family:'Shippori Mincho', serif; }
+.passbadge{
+  display:inline-block; margin-bottom:14px; padding:5px 14px; border-radius:999px;
+  font-size:12.5px; font-weight:700; letter-spacing:0.04em;
+}
+.passbadge.pass{ background:#F1F7F3; color:var(--moss); border:1px solid var(--moss); }
+.passbadge.retry{ background:#FBF0F1; color:var(--seal-dark); border:1px solid var(--seal); }
+
+.footer-note{ text-align:center; color:var(--muted); font-size:11.5px; margin-top:22px; line-height:1.6; }
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================================
+   QUESTION BANK — Kanji Quiz Advance
+   Setiap soal punya:
+   - level    : 1 (dasar) | 2 (menengah) | 3 (lanjutan)  -> dipakai utk mode bertahap
+   - type     : 'reading'  = kanji -> pilih bacaan hiragana
+                'describe' = deskripsi Indonesia -> pilih kanji yang tepat
+                'odd'      = cari kata yang TIDAK sekategori
+   - topic    : dipakai buat pengelompokan flashcard
+   - prompt   : untuk type 'reading', ini kanji-nya. untuk 'describe'/'odd', ini teks soalnya.
+   - meaning  : arti bahasa Indonesia (dipakai di flashcard, hanya utk type 'reading')
+   - correct  : jawaban benar
+   - distractors : 3 pilihan pengecoh
+
+   Menambah paket baru (mis. MNN1 / MNN2) tinggal push object baru ke array
+   QUESTION_BANK dengan format yang sama, lalu set level & topic yang sesuai.
+   ========================================================================= */
+
+const QUESTION_BANK = [
+
+  // ---------------- LEVEL 1 — Paket Dasar (bacaan kanji) ----------------
+  { level:1, type:"reading", topic:"Keluarga", prompt:"家族", meaning:"Keluarga", correct:"かぞく", distractors:["かいぎ","きゅうりょう","しごと"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"兄", meaning:"Kakak laki-laki (sendiri)", correct:"あに", distractors:["あね","おとうと","いもうと"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"姉", meaning:"Kakak perempuan (sendiri)", correct:"あね", distractors:["あに","むすめ","むすこ"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"弟", meaning:"Adik laki-laki (sendiri)", correct:"おとうと", distractors:["いもうと","むすこ","むすめ"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"妹", meaning:"Adik perempuan (sendiri)", correct:"いもうと", distractors:["おとうと","あね","あに"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"両親", meaning:"Kedua orang tua", correct:"りょうしん", distractors:["ちちおや","ははおや","かぞく"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"父親", meaning:"Ayah", correct:"ちちおや", distractors:["ははおや","りょうしん","おっと"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"母親", meaning:"Ibu", correct:"ははおや", distractors:["ちちおや","つま","りょうしん"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"夫", meaning:"Suami", correct:"おっと", distractors:["つま","むすこ","むすめ"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"妻", meaning:"Istri", correct:"つま", distractors:["おっと","まご","あね"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"息子", meaning:"Anak laki-laki (sendiri)", correct:"むすこ", distractors:["むすめ","まご","あに"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"娘", meaning:"Anak perempuan (sendiri)", correct:"むすめ", distractors:["むすこ","いもうと","あね"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"孫", meaning:"Cucu", correct:"まご", distractors:["むすこ","むすめ","おっと"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"男性", meaning:"Laki-laki", correct:"だんせい", distractors:["じょせい","かぞく","りょうしん"] },
+  { level:1, type:"reading", topic:"Keluarga", prompt:"女性", meaning:"Perempuan", correct:"じょせい", distractors:["だんせい","あね","いもうと"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"体", meaning:"Tubuh/badan", correct:"からだ", distractors:["あたま","かお","かみ"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"頭", meaning:"Kepala", correct:"あたま", distractors:["からだ","くび","むね"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"顔", meaning:"Wajah", correct:"かお", distractors:["かみ","はな","くび"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"髪", meaning:"Rambut", correct:"かみ", distractors:["かお","ゆび","うで"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"鼻", meaning:"Hidung", correct:"はな", distractors:["くび","むね","ゆび"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"首", meaning:"Leher", correct:"くび", distractors:["はな","うで","あたま"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"腕", meaning:"Lengan", correct:"うで", distractors:["ゆび","むね","くび"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"指", meaning:"Jari/jemari", correct:"ゆび", distractors:["うで","はな","かみ"] },
+  { level:1, type:"reading", topic:"Tubuh", prompt:"胸", meaning:"Dada", correct:"むね", distractors:["くび","あたま","からだ"] },
+  { level:1, type:"reading", topic:"Kerja", prompt:"仕事", meaning:"Pekerjaan", correct:"しごと", distractors:["きゅうりょう","かいぎ","こうつう"] },
+  { level:1, type:"reading", topic:"Kerja", prompt:"給料", meaning:"Gaji", correct:"きゅうりょう", distractors:["しごと","かいぎ","どうろ"] },
+  { level:1, type:"reading", topic:"Kerja", prompt:"会議", meaning:"Rapat", correct:"かいぎ", distractors:["しごと","きゅうりょう","こうつう"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"食べ物", meaning:"Makanan", correct:"たべもの", distractors:["のみもの","やさい","にく"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"飲み物", meaning:"Minuman", correct:"のみもの", distractors:["たべもの","にく","やさい"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"野菜", meaning:"Sayur", correct:"やさい", distractors:["にく","たべもの","のみもの"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"肉", meaning:"Daging", correct:"にく", distractors:["やさい","ぎゅうにく","ぶたにく"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"牛肉", meaning:"Daging sapi", correct:"ぎゅうにく", distractors:["ぶたにく","とりにく","にく"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"豚肉", meaning:"Daging babi", correct:"ぶたにく", distractors:["ぎゅうにく","とりにく","にく"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"鶏肉", meaning:"Daging ayam", correct:"とりにく", distractors:["ぎゅうにく","ぶたにく","にく"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"朝食", meaning:"Makan pagi", correct:"ちょうしょく", distractors:["ちゅうしょく","ゆうしょく","たべもの"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"昼食", meaning:"Makan siang", correct:"ちゅうしょく", distractors:["ちょうしょく","ゆうしょく","のみもの"] },
+  { level:1, type:"reading", topic:"Makanan", prompt:"夕食", meaning:"Makan malam", correct:"ゆうしょく", distractors:["ちょうしょく","ちゅうしょく","やさい"] },
+  { level:1, type:"reading", topic:"Transportasi", prompt:"自転車", meaning:"Sepeda", correct:"じてんしゃ", distractors:["じどうしゃ","ひこうき","ふね"] },
+  { level:1, type:"reading", topic:"Transportasi", prompt:"自動車", meaning:"Mobil", correct:"じどうしゃ", distractors:["じてんしゃ","ふね","ひこうき"] },
+  { level:1, type:"reading", topic:"Transportasi", prompt:"飛行機", meaning:"Pesawat terbang", correct:"ひこうき", distractors:["じどうしゃ","じてんしゃ","ふね"] },
+  { level:1, type:"reading", topic:"Transportasi", prompt:"船", meaning:"Kapal laut", correct:"ふね", distractors:["ひこうき","じてんしゃ","どうろ"] },
+  { level:1, type:"reading", topic:"Transportasi", prompt:"道路", meaning:"Jalan raya", correct:"どうろ", distractors:["こうつう","ふね","じどうしゃ"] },
+  { level:1, type:"reading", topic:"Transportasi", prompt:"交通", meaning:"Transportasi/lalu lintas", correct:"こうつう", distractors:["どうろ","しごと","かいぎ"] },
+  { level:1, type:"reading", topic:"Warna", prompt:"色", meaning:"Warna", correct:"いろ", distractors:["あおいろ","あかいろ","くろいろ"] },
+  { level:1, type:"reading", topic:"Warna", prompt:"青色", meaning:"Biru", correct:"あおいろ", distractors:["あかいろ","くろいろ","しろいろ"] },
+  { level:1, type:"reading", topic:"Warna", prompt:"赤色", meaning:"Merah", correct:"あかいろ", distractors:["あおいろ","しろいろ","くろいろ"] },
+  { level:1, type:"reading", topic:"Warna", prompt:"黒色", meaning:"Hitam", correct:"くろいろ", distractors:["しろいろ","あおいろ","あかいろ"] },
+  { level:1, type:"reading", topic:"Warna", prompt:"白色", meaning:"Putih", correct:"しろいろ", distractors:["くろいろ","あかいろ","いろ"] },
+  { level:1, type:"reading", topic:"Kesehatan", prompt:"病気", meaning:"Penyakit", correct:"びょうき", distractors:["かぜ","ねつ","せき"] },
+  { level:1, type:"reading", topic:"Kesehatan", prompt:"風邪", meaning:"Masuk angin/flu", correct:"かぜ", distractors:["びょうき","ねつ","せき"] },
+
+  // ---------------- LEVEL 2 — Paket Tambahan (bacaan kanji, lebih variatif) ----------------
+  { level:2, type:"reading", topic:"Keluarga", prompt:"親", meaning:"Orang tua", correct:"おや", distractors:["りょうしん","かぞく","まご"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"お兄さん", meaning:"Kakak laki-laki (orang lain)", correct:"おにいさん", distractors:["あに","おねえさん","あね"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"お姉さん", meaning:"Kakak perempuan (orang lain)", correct:"おねえさん", distractors:["あね","おにいさん","あに"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"ご主人", meaning:"Suami (orang lain)", correct:"ごしゅじん", distractors:["おっと","つま","おくさん"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"奥さん", meaning:"Istri (orang lain)", correct:"おくさん", distractors:["つま","ごしゅじん","おっと"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"伯父", meaning:"Om/paman", correct:"おじ", distractors:["おば","まご","りょうしん"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"伯母", meaning:"Tante/bibi", correct:"おば", distractors:["おじ","まご","りょうしん"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"先輩", meaning:"Senior", correct:"せんぱい", distractors:["こうはい","どうりょう","しゃちょう"] },
+  { level:2, type:"reading", topic:"Keluarga", prompt:"後輩", meaning:"Junior", correct:"こうはい", distractors:["せんぱい","どうりょう","しゃちょう"] },
+  { level:2, type:"reading", topic:"Tubuh", prompt:"髭", meaning:"Kumis", correct:"ひげ", distractors:["のど","かみ","はな"] },
+  { level:2, type:"reading", topic:"Tubuh", prompt:"喉", meaning:"Tenggorokan", correct:"のど", distractors:["ひげ","くび","むね"] },
+  { level:2, type:"reading", topic:"Tubuh", prompt:"お腹", meaning:"Perut", correct:"おなか", distractors:["こし","せなか","むね"] },
+  { level:2, type:"reading", topic:"Tubuh", prompt:"腰", meaning:"Pinggang", correct:"こし", distractors:["おなか","せなか","ほね"] },
+  { level:2, type:"reading", topic:"Tubuh", prompt:"お尻", meaning:"Pantat", correct:"おしり", distractors:["せなか","こし","ほね"] },
+  { level:2, type:"reading", topic:"Tubuh", prompt:"背中", meaning:"Punggung", correct:"せなか", distractors:["こし","おしり","ほね"] },
+  { level:2, type:"reading", topic:"Tubuh", prompt:"骨", meaning:"Tulang", correct:"ほね", distractors:["せなか","こし","からだ"] },
+  { level:2, type:"reading", topic:"Profesi", prompt:"社長", meaning:"Bos/kepala perusahaan", correct:"しゃちょう", distractors:["ぶちょう","かちょう","てんいん"] },
+  { level:2, type:"reading", topic:"Profesi", prompt:"店員", meaning:"Pelayan/karyawan toko", correct:"てんいん", distractors:["しゃちょう","けいさつ","かしゅ"] },
+  { level:2, type:"reading", topic:"Profesi", prompt:"警察", meaning:"Polisi/kepolisian", correct:"けいさつ", distractors:["てんいん","はいしゃ","しゃちょう"] },
+  { level:2, type:"reading", topic:"Profesi", prompt:"歌手", meaning:"Penyanyi", correct:"かしゅ", distractors:["うんてんしゅ","てんいん","どうりょう"] },
+  { level:2, type:"reading", topic:"Profesi", prompt:"運転手", meaning:"Supir", correct:"うんてんしゅ", distractors:["かしゅ","てんいん","どうりょう"] },
+  { level:2, type:"reading", topic:"Profesi", prompt:"同僚", meaning:"Rekan kerja", correct:"どうりょう", distractors:["せんぱい","こうはい","しゃちょう"] },
+  { level:2, type:"reading", topic:"Profesi", prompt:"歯医者", meaning:"Dokter gigi", correct:"はいしゃ", distractors:["けいさつ","てんいん","しゃちょう"] },
+  { level:2, type:"reading", topic:"Kerja", prompt:"面接", meaning:"Interview", correct:"めんせつ", distractors:["りれきしょ","しゅっちょう","かいぎ"] },
+  { level:2, type:"reading", topic:"Kerja", prompt:"履歴書", meaning:"CV", correct:"りれきしょ", distractors:["めんせつ","しょるい","きゅうりょう"] },
+  { level:2, type:"reading", topic:"Kerja", prompt:"出張", meaning:"Perjalanan dinas", correct:"しゅっちょう", distractors:["かいぎ","めんせつ","きゅうりょう"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"料理", meaning:"Masakan", correct:"りょうり", distractors:["やさい","たべもの","にく"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"玉ねぎ", meaning:"Bawang bombay", correct:"たまねぎ", distractors:["にんじん","なす","やさい"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"人参", meaning:"Wortel", correct:"にんじん", distractors:["たまねぎ","なす","やさい"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"茄子", meaning:"Terong", correct:"なす", distractors:["たまねぎ","にんじん","やさい"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"米", meaning:"Beras", correct:"こめ", distractors:["にく","やさい","たべもの"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"お酒", meaning:"Sake/minuman keras", correct:"おさけ", distractors:["おちゃ","おゆ","のみもの"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"お茶", meaning:"Teh", correct:"おちゃ", distractors:["おさけ","おゆ","のみもの"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"お湯", meaning:"Air panas", correct:"おゆ", distractors:["おちゃ","おさけ","のみもの"] },
+  { level:2, type:"reading", topic:"Dapur", prompt:"洋食", meaning:"Makanan Barat", correct:"ようしょく", distractors:["りょうり","たべもの","やさい"] },
+  { level:2, type:"reading", topic:"Transportasi", prompt:"乗り物", meaning:"Kendaraan", correct:"のりもの", distractors:["どうろ","こうつう","じどうしゃ"] },
+  { level:2, type:"reading", topic:"Transportasi", prompt:"救急車", meaning:"Ambulans", correct:"きゅうきゅうしゃ", distractors:["しょうぼうしゃ","じどうしゃ","じてんしゃ"] },
+  { level:2, type:"reading", topic:"Transportasi", prompt:"消防車", meaning:"Mobil damkar", correct:"しょうぼうしゃ", distractors:["きゅうきゅうしゃ","じどうしゃ","じてんしゃ"] },
+  { level:2, type:"reading", topic:"Transportasi", prompt:"新幹線", meaning:"Shinkansen", correct:"しんかんせん", distractors:["ちかてつ","どうろ","こうつう"] },
+  { level:2, type:"reading", topic:"Transportasi", prompt:"信号", meaning:"Lampu lalu lintas", correct:"しんごう", distractors:["どうろ","こうつう","のりもの"] },
+  { level:2, type:"reading", topic:"Transportasi", prompt:"地下鉄", meaning:"Kereta bawah tanah", correct:"ちかてつ", distractors:["しんかんせん","どうろ","こうつう"] },
+  { level:2, type:"reading", topic:"Pakaian", prompt:"服", meaning:"Pakaian", correct:"ふく", distractors:["ようふく","わふく","きもの"] },
+  { level:2, type:"reading", topic:"Pakaian", prompt:"洋服", meaning:"Pakaian ala Barat", correct:"ようふく", distractors:["わふく","きもの","ふく"] },
+  { level:2, type:"reading", topic:"Pakaian", prompt:"着物", meaning:"Kimono", correct:"きもの", distractors:["ふく","ようふく","わふく"] },
+  { level:2, type:"reading", topic:"Pakaian", prompt:"下着", meaning:"Pakaian dalam", correct:"したぎ", distractors:["くつした","てぶくろ","ぼうし"] },
+  { level:2, type:"reading", topic:"Pakaian", prompt:"靴下", meaning:"Kaos kaki", correct:"くつした", distractors:["したぎ","てぶくろ","ぼうし"] },
+  { level:2, type:"reading", topic:"Arah & Dunia", prompt:"南", meaning:"Selatan", correct:"みなみ", distractors:["きた","ひがし","にし"] },
+  { level:2, type:"reading", topic:"Arah & Dunia", prompt:"東", meaning:"Timur", correct:"ひがし", distractors:["きた","みなみ","にし"] },
+  { level:2, type:"reading", topic:"Arah & Dunia", prompt:"西", meaning:"Barat", correct:"にし", distractors:["きた","みなみ","ひがし"] },
+  { level:2, type:"reading", topic:"Arah & Dunia", prompt:"世界", meaning:"Dunia", correct:"せかい", distractors:["くに","にほん","ちゅうごく"] },
+
+  // ---------------- LEVEL 2 — Paket Kreatif bagian A (bacaan kanji, tema hobi & alam) ----------------
+  { level:2, type:"reading", topic:"Hobi", prompt:"趣味", meaning:"Hobi", correct:"しゅみ", distractors:["しごと","かいぎ","きゅうりょう"] },
+  { level:2, type:"reading", topic:"Hobi", prompt:"写真", meaning:"Foto", correct:"しゃしん", distractors:["えいが","おんがく","りょこう"] },
+  { level:2, type:"reading", topic:"Hobi", prompt:"映画", meaning:"Film", correct:"えいが", distractors:["しゃしん","おんがく","まんが"] },
+  { level:2, type:"reading", topic:"Hobi", prompt:"旅行", meaning:"Jalan-jalan/tamasya", correct:"りょこう", distractors:["しゅみ","えいが","かいもの"] },
+  { level:2, type:"reading", topic:"Hobi", prompt:"音楽", meaning:"Musik", correct:"おんがく", distractors:["うた","えいが","しゃしん"] },
+  { level:2, type:"reading", topic:"Hobi", prompt:"買い物", meaning:"Belanja", correct:"かいもの", distractors:["りょこう","しゅみ","しごと"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"光", meaning:"Cahaya", correct:"ひかり", distractors:["おと","かぜ","くも"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"音", meaning:"Suara", correct:"おと", distractors:["ひかり","かぜ","くも"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"太陽", meaning:"Matahari", correct:"たいよう", distractors:["くも","かぜ","うみ"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"雲", meaning:"Awan", correct:"くも", distractors:["たいよう","かぜ","うみ"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"天気", meaning:"Cuaca", correct:"てんき", distractors:["きせつ","てんきよほう","つゆ"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"天気予報", meaning:"Ramalan cuaca", correct:"てんきよほう", distractors:["てんき","きせつ","つゆ"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"季節", meaning:"Musim", correct:"きせつ", distractors:["てんき","つゆ","けしき"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"梅雨", meaning:"Musim hujan", correct:"つゆ", distractors:["きせつ","てんき","くも"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"景色", meaning:"Pemandangan", correct:"けしき", distractors:["くうき","もり","はやし"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"空気", meaning:"Udara", correct:"くうき", distractors:["けしき","かぜ","ひかり"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"湖", meaning:"Danau", correct:"みずうみ", distractors:["うみ","いけ","もり"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"海", meaning:"Laut", correct:"うみ", distractors:["みずうみ","いけ","はやし"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"森", meaning:"Hutan rimba", correct:"もり", distractors:["はやし","いけ","うみ"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"林", meaning:"Hutan", correct:"はやし", distractors:["もり","いけ","うみ"] },
+  { level:2, type:"reading", topic:"Alam", prompt:"池", meaning:"Kolam", correct:"いけ", distractors:["みずうみ","うみ","もり"] },
+  { level:2, type:"reading", topic:"Hewan", prompt:"動物", meaning:"Binatang", correct:"どうぶつ", distractors:["いぬ","ねこ","とり"] },
+  { level:2, type:"reading", topic:"Hewan", prompt:"子犬", meaning:"Anak anjing", correct:"こいぬ", distractors:["こねこ","ことり","いぬ"] },
+  { level:2, type:"reading", topic:"Hewan", prompt:"子猫", meaning:"Anak kucing", correct:"こねこ", distractors:["こいぬ","ことり","ねこ"] },
+  { level:2, type:"reading", topic:"Hewan", prompt:"小鳥", meaning:"Burung kecil", correct:"ことり", distractors:["こいぬ","こねこ","とり"] },
+
+  // ---------------- LEVEL 3 — Paket Kreatif bagian B (deskripsi -> kanji) ----------------
+  { level:3, type:"describe", topic:"Acara", prompt:"Acara tradisional melihat bunga sakura di musim semi", correct:"花見", distractors:["お祭り","花火大会","運動会"] },
+  { level:3, type:"describe", topic:"Acara", prompt:"Acara olahraga tahunan di sekolah", correct:"運動会", distractors:["展覧会","結婚式","お祭り"] },
+  { level:3, type:"describe", topic:"Acara", prompt:"Upacara pernikahan", correct:"結婚式", distractors:["展覧会","花見","お祭り"] },
+  { level:3, type:"describe", topic:"Acara", prompt:"Acara kembang api di malam hari", correct:"花火大会", distractors:["花見","お祭り","展覧会"] },
+  { level:3, type:"describe", topic:"Acara", prompt:"Pameran karya seni atau lukisan", correct:"展覧会", distractors:["コンサート","お祭り","結婚式"] },
+  { level:3, type:"describe", topic:"Arah", prompt:"Arah mata angin yang berlawanan dengan Selatan (南)", correct:"北", distractors:["東","西","南東"] },
+  { level:3, type:"describe", topic:"Arah", prompt:"Arah di antara Utara dan Timur", correct:"北東", distractors:["北西","南東","南西"] },
+  { level:3, type:"describe", topic:"Arah", prompt:"Arah di antara Selatan dan Barat", correct:"南西", distractors:["北西","南東","北東"] },
+  { level:3, type:"describe", topic:"Warna", prompt:"Warna seperti kulit kayu, mirip warna kopi", correct:"茶色", distractors:["黄色","銀色","黒色"] },
+  { level:3, type:"describe", topic:"Warna", prompt:"Warna cerah seperti matahari atau pisang", correct:"黄色", distractors:["茶色","銀色","青色"] },
+  { level:3, type:"describe", topic:"Warna", prompt:"Warna logam yang berkilau, seperti uang koin", correct:"銀色", distractors:["茶色","黄色","白色"] },
+  { level:3, type:"describe", topic:"Aksesoris", prompt:"Benda yang dipakai di jari sebagai simbol pernikahan", correct:"指輪", distractors:["手袋","帽子","眼鏡"] },
+  { level:3, type:"describe", topic:"Aksesoris", prompt:"Benda yang dipakai di tangan agar tidak kedinginan", correct:"手袋", distractors:["指輪","眼鏡","帽子"] },
+  { level:3, type:"describe", topic:"Aksesoris", prompt:"Benda yang dipakai di kepala untuk gaya atau melindungi dari matahari", correct:"帽子", distractors:["手袋","指輪","眼鏡"] },
+  { level:3, type:"describe", topic:"Aksesoris", prompt:"Benda yang membantu orang melihat lebih jelas", correct:"眼鏡", distractors:["帽子","指輪","手袋"] },
+
+  // ---------------- LEVEL 3 — Paket Kreatif bagian C (cari yang beda sendiri) ----------------
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori arah mata angin?", correct:"道路", distractors:["北","南","東"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori hewan?", correct:"天気", distractors:["犬","猫","鳥"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori acara/festival?", correct:"天気予報", distractors:["花見","お祭り","結婚式"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori warna?", correct:"季節", distractors:["黄色","茶色","銀色"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori alam (nature)?", correct:"写真", distractors:["海","森","湖"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori pakaian/aksesoris?", correct:"音楽", distractors:["帽子","手袋","指輪"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori hobi/hiburan?", correct:"道路", distractors:["映画","音楽","写真"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori nama negara?", correct:"天気", distractors:["日本","韓国","中国"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori alat transportasi?", correct:"写真", distractors:["自転車","飛行機","船"] },
+  { level:3, type:"odd", topic:"Kategori", prompt:"Manakah yang BUKAN termasuk kategori cuaca/alam?", correct:"結婚式", distractors:["天気","雲","太陽"] },
+];
+
+// id unik per soal
+QUESTION_BANK.forEach((q, i) => { q.id = "q" + i; });
+
+const LEVELS = [
+  { num:1, name:"Level 1 — Dasar",    desc:"Kosakata keluarga, tubuh, makanan, transportasi & warna dasar.", passScore:0.7 },
+  { num:2, name:"Level 2 — Menengah", desc:"Kosakata profesi, dapur, pakaian, alam, hobi & hewan.",          passScore:0.7 },
+  { num:3, name:"Level 3 — Lanjutan", desc:"Tebak kanji dari deskripsi & mencari kata yang tidak sekategori.", passScore:0.7 },
+];
+
+function getQuestionsByLevel(level) {
+  return QUESTION_BANK.filter(q => q.level === level);
+}
+function getFlashcardableByLevel(level) {
+  return QUESTION_BANK.filter(q => q.level === level && q.type === "reading");
+}
+
+</script>
+<script>
+/* =========================================================================
+   Kanji Quiz Advance — app logic
+   Semua state di memori (tidak ada localStorage), reset saat halaman di-reload.
+   ========================================================================= */
+
+const QUIZ_SIZE_LEVEL = 12;   // jumlah soal per ronde Kuis Bertahap
+const QUIZ_SIZE_SPEED = 15;   // jumlah soal per ronde Mode Kecepatan
+const TIME_LIMIT = 12;        // detik per soal, Mode Kecepatan
+const PASS_SCORE = 0.7;       // ambang lulus per level
+
+const state = {
+  screen: "home",
+  mode: null,          // 'level' | 'speed' | 'flash'
+  level: null,
+  speedPool: null,     // 1 | 2 | 3 | 'all'
+  progress: { 1:{passed:false,best:0}, 2:{passed:false,best:0}, 3:{passed:false,best:0} },
+
+  sessionQuestions: [],
+  idx: 0,
+  score: 0,
+  correctCount: 0,
+  answered: false,
+  streak: 0,
+  maxStreak: 0,
+
+  timerId: null,
+  timeLeft: TIME_LIMIT,
+
+  flashDeck: [],
+  flashIdx: 0,
+  flashFlipped: false,
+};
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function pickSession(pool, n) {
+  return shuffle(pool).slice(0, Math.min(n, pool.length)).map(q => ({
+    ...q,
+    options: shuffle([q.correct, ...q.distractors]),
+  }));
+}
+function clearTimer() {
+  if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+}
+function nextLevelNum() {
+  for (const lv of LEVELS) if (!state.progress[lv.num].passed) return lv.num;
+  return null; // semua sudah lulus
+}
+
+/* ================= ROUTING ================= */
+function goHome() { clearTimer(); state.screen = "home"; render(); }
+function goFlashPick() { state.screen = "flash-pick"; render(); }
+function goLevelPick() { state.screen = "level-pick"; render(); }
+function goSpeedPick() { state.screen = "speed-pick"; render(); }
+
+function startFlashcards(level) {
+  state.mode = "flash";
+  state.level = level;
+  state.flashDeck = shuffle(getFlashcardableByLevel(level));
+  state.flashIdx = 0;
+  state.flashFlipped = false;
+  state.screen = "flashcard";
+  render();
+}
+
+function startLevelQuiz(level) {
+  state.mode = "level";
+  state.level = level;
+  state.sessionQuestions = pickSession(getQuestionsByLevel(level), QUIZ_SIZE_LEVEL);
+  state.idx = 0; state.score = 0; state.correctCount = 0; state.answered = false;
+  state.streak = 0; state.maxStreak = 0;
+  state.screen = "quiz";
+  render();
+}
+
+function startSpeedQuiz(pool) {
+  state.mode = "speed";
+  state.speedPool = pool;
+  const source = pool === "all" ? QUESTION_BANK : getQuestionsByLevel(pool);
+  state.sessionQuestions = pickSession(source, QUIZ_SIZE_SPEED);
+  state.idx = 0; state.score = 0; state.correctCount = 0; state.answered = false;
+  state.streak = 0; state.maxStreak = 0;
+  state.screen = "quiz";
+  render();
+  startTimerForCurrentQuestion();
+}
+
+/* ================= TIMER (speed mode) ================= */
+function startTimerForCurrentQuestion() {
+  clearTimer();
+  state.timeLeft = TIME_LIMIT;
+  updateTimerUI();
+  state.timerId = setInterval(() => {
+    state.timeLeft = Math.max(0, state.timeLeft - 0.1);
+    updateTimerUI();
+    if (state.timeLeft <= 0) {
+      clearTimer();
+      if (!state.answered) onAnswer(null); // timeout = salah
+    }
+  }, 100);
+}
+function updateTimerUI() {
+  const ring = document.getElementById("timerFg");
+  const label = document.getElementById("timerNum");
+  const wrap = document.getElementById("timerRingWrap");
+  if (!ring || !label) return;
+  const circumference = 2 * Math.PI * 18;
+  const frac = state.timeLeft / TIME_LIMIT;
+  ring.style.strokeDashoffset = String(circumference * (1 - frac));
+  label.textContent = Math.ceil(state.timeLeft);
+  if (wrap) wrap.classList.toggle("low", state.timeLeft <= 4);
+}
+
+/* ================= QUIZ FLOW ================= */
+function currentQuestion() { return state.sessionQuestions[state.idx]; }
+
+function onAnswer(chosen) {
+  if (state.answered) return;
+  state.answered = true;
+  clearTimer();
+  const q = currentQuestion();
+  const isCorrect = chosen === q.correct;
+
+  if (isCorrect) {
+    state.correctCount++;
+    state.streak++;
+    state.maxStreak = Math.max(state.maxStreak, state.streak);
+    if (state.mode === "speed") {
+      const bonus = Math.floor(100 * (state.timeLeft / TIME_LIMIT));
+      state.score += 100 + bonus;
+    } else {
+      state.score++;
+    }
+  } else {
+    state.streak = 0;
+  }
+
+  document.querySelectorAll(".opt").forEach(btn => {
+    const val = decodeURIComponent(btn.dataset.opt);
+    btn.classList.add("disabled");
+    if (val === q.correct) btn.classList.add("correct");
+    else if (val === chosen) btn.classList.add("wrong");
+    else btn.classList.add("dim");
+  });
+
+  const fb = document.getElementById("feedback");
+  const stamp = document.getElementById("stamp");
+  if (fb) {
+    if (isCorrect) {
+      fb.textContent = "Benar! 正解 (seikai)";
+      fb.className = "feedback show-correct";
+    } else if (chosen === null) {
+      fb.textContent = `Waktu habis — jawaban benar: ${q.correct}`;
+      fb.className = "feedback show-wrong";
+    } else {
+      fb.textContent = `Kurang tepat — jawaban benar: ${q.correct}`;
+      fb.className = "feedback show-wrong";
+    }
+  }
+  if (stamp) {
+    if (isCorrect) { stamp.textContent = "正"; stamp.classList.add("pop"); }
+    else { stamp.textContent = "✕"; stamp.classList.add("pop", "wrongstamp"); }
+  }
+
+  if (state.mode === "speed") {
+    updateStreakUI();
+    setTimeout(onNext, 750); // auto-advance, ritme cepat
+  } else {
+    const nextBtn = document.getElementById("nextBtn");
+    if (nextBtn) nextBtn.disabled = false;
+  }
+}
+
+function updateStreakUI() {
+  const el = document.getElementById("streakLabel");
+  if (el) el.textContent = state.streak > 1 ? `Combo ×${state.streak}` : "";
+}
+
+function onNext() {
+  state.idx++;
+  state.answered = false;
+  if (state.idx >= state.sessionQuestions.length) { renderResultScreen(); return; }
+  render();
+  if (state.mode === "speed") startTimerForCurrentQuestion();
+}
+
+/* ================= RESULT ================= */
+function renderResultScreen() {
+  clearTimer();
+  state.screen = "result";
+  if (state.mode === "level") {
+    const total = state.sessionQuestions.length;
+    const pct = state.correctCount / total;
+    const prog = state.progress[state.level];
+    prog.best = Math.max(prog.best, pct);
+    if (pct >= PASS_SCORE) prog.passed = true;
+  }
+  render();
+}
+
+function gradeFor(pct) {
+  if (pct >= 0.9) return { letter: "S", msg: "Sugoi! Nyaris sempurna." };
+  if (pct >= 0.75) return { letter: "A", msg: "Mantap, udah jago." };
+  if (pct >= 0.6) return { letter: "B", msg: "Lumayan, dikit lagi lancar." };
+  if (pct >= 0.4) return { letter: "C", msg: "Masih perlu latihan lagi." };
+  return { letter: "D", msg: "Coba pelajari kartu belajarnya dulu, ya." };
+}
+
+/* ================= FLASHCARD FLOW ================= */
+function flashFlip() {
+  state.flashFlipped = !state.flashFlipped;
+  render();
+}
+function flashNext() {
+  if (state.flashIdx < state.flashDeck.length - 1) { state.flashIdx++; state.flashFlipped = false; render(); }
+}
+function flashPrev() {
+  if (state.flashIdx > 0) { state.flashIdx--; state.flashFlipped = false; render(); }
+}
+
+/* ================= RENDER ================= */
+function render() {
+  const app = document.getElementById("app");
+  app.innerHTML = topbarHTML() + screenHTML();
+  attachHandlers();
+  window.scrollTo(0, 0);
+}
+
+function topbarHTML() {
+  if (state.screen === "home") {
+    return `
+      <div class="topbar">
+        <div class="brand"><span class="jp">日本語 QUIZ ADVANCE</span>Kanji Quiz</div>
+      </div>`;
+  }
+  return `
+    <div class="topbar">
+      <div class="brand"><span class="jp">日本語 QUIZ ADVANCE</span>Kanji Quiz</div>
+      <button class="backbtn" id="btnHome">Menu</button>
+    </div>`;
+}
+
+function screenHTML() {
+  switch (state.screen) {
+    case "home": return homeHTML();
+    case "flash-pick": return flashPickHTML();
+    case "flashcard": return flashcardHTML();
+    case "level-pick": return levelPickHTML();
+    case "speed-pick": return speedPickHTML();
+    case "quiz": return quizHTML();
+    case "result": return resultHTML();
+    default: return "";
+  }
+}
+
+/* ---------- HOME ---------- */
+function homeHTML() {
+  const next = nextLevelNum();
+  const slots = LEVELS.map(lv => {
+    const p = state.progress[lv.num];
+    let cls = "";
+    let content = String(lv.num);
+    if (p.passed) { cls = "done"; content = "合"; }
+    else if (lv.num === next) { cls = "current"; }
+    return `<div class="stampslot ${cls}">${content}</div>`;
+  }).join("");
+
+  return `
+    <div class="sub">Pilih mode belajar. Semua progres level tersimpan selama halaman ini terbuka.</div>
+    <div class="stampcard">
+      <div class="slots">${slots}</div>
+      <div class="label"><strong>Kartu Level</strong>Lulus tiap level (≥70%) untuk buka level berikutnya di Kuis Bertahap.</div>
+    </div>
+
+    <button class="modecard" id="cardFlash">
+      <div class="icon">単</div>
+      <div>
+        <h3>Belajar Dulu</h3>
+        <p>Flashcard kanji, baca, dan arti — cocok sebelum ambil kuis.</p>
+        <span class="tag tag-study">Flashcard</span>
+      </div>
+    </button>
+
+    <button class="modecard" id="cardLevel">
+      <div class="icon">段</div>
+      <div>
+        <h3>Kuis Bertahap</h3>
+        <p>Level 1 → 2 → 3, makin lama makin susah. Lulus dulu baru naik level.</p>
+        <span class="tag tag-level">Level</span>
+      </div>
+    </button>
+
+    <button class="modecard" id="cardSpeed">
+      <div class="icon">速</div>
+      <div>
+        <h3>Mode Kecepatan</h3>
+        <p>Waktu terbatas tiap soal — makin cepat jawab, makin gede skornya.</p>
+        <span class="tag tag-speed">Speed</span>
+      </div>
+    </button>
+
+    <div class="footer-note">150 soal total dari semua paket kosakata. Skor tidak dikirim ke server mana pun.</div>
+  `;
+}
+
+/* ---------- FLASHCARD PICK ---------- */
+function flashPickHTML() {
+  const rows = LEVELS.filter(lv => lv.num !== 3).map(lv => `
+    <button class="levelrow" data-flashlevel="${lv.num}">
+      <div class="num">${lv.num}</div>
+      <div><h4>${lv.name}</h4><p>${lv.desc}</p></div>
+    </button>
+  `).join("");
+  return `
+    <div class="eyebrow">Belajar Dulu</div>
+    <h2 style="margin-bottom:8px;">Pilih level flashcard</h2>
+    <div class="sub">Level 3 fokus di soal penalaran (deskripsi &amp; kategori), jadi paling pas langsung dicoba di Kuis Bertahap.</div>
+    ${rows}
+  `;
+}
+
+/* ---------- FLASHCARD ---------- */
+function flashcardHTML() {
+  const deck = state.flashDeck;
+  const q = deck[state.flashIdx];
+  const flippedCls = state.flashFlipped ? "flipped" : "";
+  return `
+    <div class="eyebrow">Belajar Dulu — Level ${state.level}</div>
+    <div class="flash-progress">Kartu ${state.flashIdx + 1} / ${deck.length} &middot; ${q.topic}</div>
+    <div class="flashzone">
+      <div class="flashcard ${flippedCls}" id="flashcardEl">
+        <div class="punch"></div>
+        <div class="flashcard-inner">
+          <div class="flashface front">
+            <div class="topic">${q.topic}</div>
+            <div class="kanji">${q.prompt}</div>
+          </div>
+          <div class="flashface back">
+            <div class="reading">${q.correct}</div>
+            <div class="meaning">${q.meaning}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="flashhint">Ketuk kartu untuk membalik</div>
+    <div class="flashnav">
+      <button id="flashPrev" ${state.flashIdx === 0 ? "disabled" : ""}>&larr; Sebelumnya</button>
+      <button id="flashNext" ${state.flashIdx === deck.length - 1 ? "disabled" : ""}>Berikutnya &rarr;</button>
+    </div>
+    <button class="primary" id="flashToQuiz" style="margin-top:14px;">Mulai Kuis Level ${state.level}</button>
+  `;
+}
+
+/* ---------- LEVEL PICK ---------- */
+function levelPickHTML() {
+  const rows = LEVELS.map((lv, i) => {
+    const unlocked = i === 0 || state.progress[LEVELS[i - 1].num].passed;
+    const p = state.progress[lv.num];
+    const statusText = p.passed ? `Lulus &middot; skor terbaik ${Math.round(p.best * 100)}%` : lv.desc;
+    if (unlocked) {
+      return `
+        <button class="levelrow" data-level="${lv.num}">
+          <div class="num">${lv.num}</div>
+          <div><h4>${lv.name}</h4><p>${statusText}</p></div>
+        </button>`;
+    }
+    return `
+      <div class="levelrow locked">
+        <div class="num">${lv.num}</div>
+        <div><h4>${lv.name}</h4><p>Lulus Level ${lv.num - 1} dulu untuk buka ini.</p></div>
+        <div class="lockicon">&#128274;</div>
+      </div>`;
+  }).join("");
+  return `
+    <div class="eyebrow">Kuis Bertahap</div>
+    <h2 style="margin-bottom:8px;">Pilih level</h2>
+    <div class="sub">${QUIZ_SIZE_LEVEL} soal acak per ronde. Lulus minimal 70% untuk naik level.</div>
+    ${rows}
+  `;
+}
+
+/* ---------- SPEED PICK ---------- */
+function speedPickHTML() {
+  const opts = [
+    { key: 1, name: "Level 1 — Dasar" },
+    { key: 2, name: "Level 2 — Menengah" },
+    { key: 3, name: "Level 3 — Lanjutan" },
+    { key: "all", name: "Semua Level — Campuran" },
+  ];
+  const rows = opts.map(o => `
+    <button class="levelrow" data-speed="${o.key}">
+      <div class="num">${o.key === "all" ? "∀" : o.key}</div>
+      <div><h4>${o.name}</h4><p>${QUIZ_SIZE_SPEED} soal &middot; ${TIME_LIMIT} detik per soal</p></div>
+    </button>
+  `).join("");
+  return `
+    <div class="eyebrow">Mode Kecepatan</div>
+    <h2 style="margin-bottom:8px;">Pilih pool soal</h2>
+    <div class="sub">Jawab secepat mungkin. Semakin cepat benar, semakin besar skornya.</div>
+    ${rows}
+  `;
+}
+
+/* ---------- QUIZ (shared: level & speed) ---------- */
+function quizHTML() {
+  const q = currentQuestion();
+  const total = state.sessionQuestions.length;
+  const pct = Math.round((state.idx) / total * 100);
+  const modeLabel = state.mode === "speed" ? "Mode Kecepatan" : `Kuis Bertahap — Level ${state.level}`;
+
+  const questionBlock = q.type === "reading"
+    ? `<div class="kanji-big">${q.prompt}</div><div class="q-hint">Pilih bacaan (hiragana) yang tepat</div>`
+    : `<div class="q-desc">${q.prompt}</div><div class="q-hint">${q.type === "odd" ? "Pilih kata yang tidak sekategori" : "Pilih kanji yang sesuai"}</div>`;
+
+  const timerBlock = state.mode === "speed" ? `
+    <div class="timerwrap">
+      <div class="timerring" id="timerRingWrap">
+        <svg viewBox="0 0 40 40" width="40" height="40">
+          <circle class="bg" cx="20" cy="20" r="18"></circle>
+          <circle class="fg" id="timerFg" cx="20" cy="20" r="18"
+            stroke-dasharray="${2 * Math.PI * 18}" stroke-dashoffset="0"></circle>
+        </svg>
+        <div class="num" id="timerNum">${TIME_LIMIT}</div>
+      </div>
+      <div class="streak" id="streakLabel">${state.streak > 1 ? `Combo ×${state.streak}` : ""}</div>
+    </div>` : "";
+
+  return `
+    <div class="eyebrow">${modeLabel}</div>
+    <div class="progress-wrap">
+      <div class="progress-track"><div class="progress-fill ${state.mode === "speed" ? "speed" : ""}" style="width:${pct}%"></div></div>
+      <div class="progress-label">問 ${state.idx + 1} / ${total}</div>
+    </div>
+    ${timerBlock}
+    <div class="qcard">
+      <div class="stamp" id="stamp"></div>
+      <div class="section-tag">${q.topic}</div>
+      ${questionBlock}
+      <div class="options" id="options">
+        ${q.options.map((opt, i) => `
+          <button class="opt" data-opt="${encodeURIComponent(opt)}">
+            <span class="letter">${String.fromCharCode(65 + i)}</span>
+            <span>${opt}</span>
+          </button>`).join("")}
+      </div>
+      <div class="feedback" id="feedback"></div>
+      ${state.mode === "level" ? `
+      <div class="nextbar">
+        <button class="primary" id="nextBtn" disabled>Lanjut</button>
+      </div>` : ``}
+    </div>
+  `;
+}
+
+/* ---------- RESULT ---------- */
+function resultHTML() {
+  const total = state.sessionQuestions.length;
+  const correct = state.correctCount;
+  const pct = Math.round((correct / total) * 100);
+
+  if (state.mode === "level") {
+    const passed = (correct / total) >= PASS_SCORE;
+    const next = nextLevelNum();
+    const isLastLevel = state.level === LEVELS[LEVELS.length - 1].num;
+    return `
+      <div class="eyebrow">Hasil — Kuis Bertahap Level ${state.level}</div>
+      <div class="result">
+        <span class="passbadge ${passed ? "pass" : "retry"}">${passed ? "LULUS" : "BELUM LULUS"}</span>
+        <div class="bigstamp"><div class="score-num">${correct}</div><div class="score-den">/ ${total}</div></div>
+        <h2>${pct}% Benar</h2>
+        <p>${passed
+          ? (isLastLevel ? "Semua level Kuis Bertahap sudah kamu selesaikan!" : "Level berikutnya sudah terbuka.")
+          : `Perlu minimal ${Math.round(PASS_SCORE * 100)}% untuk lulus. Coba lagi, yuk.`}</p>
+        ${passed && !isLastLevel ? `<button class="primary" id="toNextLevel">Lanjut ke Level ${next}</button>` : ``}
+        <button class="ghost" id="retryLevel">Ulangi Level Ini</button>
+        <button class="ghost" id="homeBtn">Kembali ke Menu</button>
+      </div>
+      <div class="footer-note">Progres level ini hanya tersimpan selama halaman terbuka.</div>
+    `;
+  }
+
+  // speed mode
+  const grade = gradeFor(correct / total);
+  return `
+    <div class="eyebrow">Hasil — Mode Kecepatan</div>
+    <div class="result">
+      <div class="bigstamp amber"><div class="score-num">${grade.letter}</div><div class="score-den">grade</div></div>
+      <h2>${state.score} poin</h2>
+      <p>${correct}/${total} benar (${pct}%) &middot; combo tertinggi ×${state.maxStreak}<br>${grade.msg}</p>
+      <button class="primary amber" id="retrySpeed">Main Lagi</button>
+      <button class="ghost" id="homeBtn">Kembali ke Menu</button>
+    </div>
+    <div class="footer-note">Skor tidak disimpan ke server mana pun.</div>
+  `;
+}
+
+/* ================= EVENT WIRING ================= */
+function attachHandlers() {
+  const $ = (id) => document.getElementById(id);
+  if ($("btnHome")) $("btnHome").addEventListener("click", goHome);
+
+  // home
+  if ($("cardFlash")) $("cardFlash").addEventListener("click", goFlashPick);
+  if ($("cardLevel")) $("cardLevel").addEventListener("click", goLevelPick);
+  if ($("cardSpeed")) $("cardSpeed").addEventListener("click", goSpeedPick);
+
+  // flash pick
+  document.querySelectorAll("[data-flashlevel]").forEach(btn => {
+    btn.addEventListener("click", () => startFlashcards(Number(btn.dataset.flashlevel)));
+  });
+
+  // flashcard
+  if ($("flashcardEl")) $("flashcardEl").addEventListener("click", flashFlip);
+  if ($("flashPrev")) $("flashPrev").addEventListener("click", flashPrev);
+  if ($("flashNext")) $("flashNext").addEventListener("click", flashNext);
+  if ($("flashToQuiz")) $("flashToQuiz").addEventListener("click", () => startLevelQuiz(state.level));
+
+  // level pick
+  document.querySelectorAll("[data-level]").forEach(btn => {
+    btn.addEventListener("click", () => startLevelQuiz(Number(btn.dataset.level)));
+  });
+
+  // speed pick
+  document.querySelectorAll("[data-speed]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const v = btn.dataset.speed;
+      startSpeedQuiz(v === "all" ? "all" : Number(v));
+    });
+  });
+
+  // quiz options
+  document.querySelectorAll(".opt").forEach(btn => {
+    btn.addEventListener("click", () => onAnswer(decodeURIComponent(btn.dataset.opt)));
+  });
+  if ($("nextBtn")) $("nextBtn").addEventListener("click", onNext);
+
+  // result
+  if ($("toNextLevel")) $("toNextLevel").addEventListener("click", () => startLevelQuiz(nextLevelNum()));
+  if ($("retryLevel")) $("retryLevel").addEventListener("click", () => startLevelQuiz(state.level));
+  if ($("retrySpeed")) $("retrySpeed").addEventListener("click", () => startSpeedQuiz(state.speedPool));
+  if ($("homeBtn")) $("homeBtn").addEventListener("click", goHome);
+}
+
+render();
+
+</script>
+</body>
+</html>
